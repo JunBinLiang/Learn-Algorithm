@@ -11,3 +11,4 @@
 
 ## Geometry
 1.[Determining if two consecutive line segments turn left or right ](./geo/1.md) <br/>
+2.[Convex Hull](./geo/2.md) <br/>
