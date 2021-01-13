@@ -1,0 +1,419 @@
+/*
+ *
+ * code for dp2
+ *
+ */
+
+/*
+ * cht vector and intersection
+ */
+
+struct line { long long m, b; };
+double intersect(line a, line b) {
+    return (double)(b.b - a.b) / (a.m - b.m);
+}
+// Invariant: cht[i].m is in decreasing order.
+vector<line> cht;
+/*
+ * The intersection points are
+ *  intersect(cht[0], cht[1]), intersect(cht[1], cht[2]), ...
+ *  Line i is optimal in the range
+ *      [intersect(cht[i-1], cht[i]), intersect(cht[i], cht[i+1])]
+ *  where for i = 0, the first point is -infinity,
+ *  and for i = N-1, the last point is infinity.
+ */
+
+/*
+ * cht with query
+ */
+
+struct line { long long m, b; };
+double intersect(line a, line b) {
+    return (double)(b.b - a.b) / (a.m - b.m);
+}
+// Invariant: cht[i].m is in decreasing order.
+vector<line> cht;
+
+/* Recall that the range the ith line is dominant in is:
+ * [intersect(cht[i-1], cht[i]), intersect(cht[i], cht[i+1])]
+ * We want to find the line that is dominant at x.
+ * To do this, we note that the sequence (intersect(cht[i], cht[i+1]))
+ * is monotonically increasing in i.
+ * Hence we can binary search for the minimum i such that
+ * intersect(cht[i], cht[i+1]) >= x
+ */
+long long query(long long x) {
+    int lo = 0; int hi = cht.size()-2;
+    // Find largest idx such that x <= intersect(cht[idx], cht[idx+1])
+    // If this doesn't exist then idx should be cht.size()-1.
+    int idx = cht.size()-1;
+    while (lo <= hi) {
+        int mid = (lo+hi)/2;
+        if (intersect(cht[mid], cht[mid+1]) >= x) {
+            idx = mid; hi = mid-1;
+        } else { lo = mid+1; }
+    }
+    return cht[idx].m*x + cht[idx].b;
+}
+
+/*
+ * cht full
+ */
+
+struct line { long long m, b; };
+double intersect(line a, line b) {
+    return (double)(b.b - a.b) / (a.m - b.m);
+}
+// Invariant: cht[i].m is in decreasing order.
+vector<line> cht;
+
+void add(line l) {
+    auto n = cht.size();
+    while (n >= 2 &&
+           intersect(cht[n-1], cht[n-2]) >= intersect(cht[n-1], l)) {
+        cht.pop_back();
+        n = cht.size();
+    }
+    cht.push_back(l);
+}
+
+long long query(long long x) {
+    int lo = 0; int hi = cht.size()-2;
+    // Find largest idx such that x <= intersect(cht[idx], cht[idx+1])
+    int idx = cht.size()-1;
+    while (lo <= hi) {
+        int mid = (lo+hi)/2;
+        if (intersect(cht[mid], cht[mid+1]) >= x) {
+            idx = mid; hi = mid-1;
+        } else { lo = mid+1; }
+    }
+    return cht[idx].m*x + cht[idx].b;
+}
+
+/*
+ * cht increasing queries
+ */
+
+struct line { long long m, b; };
+double intersect(line a, line b) {
+    return (double)(b.b - a.b) / (a.m - b.m);
+}
+// Invariant: cht[i].m is in decreasing order.
+vector<line> cht;
+int cp;
+
+void add(line l) {
+    auto n = cht.size();
+    while (n >= 2 &&
+           intersect(cht[n-1], cht[n-2]) >= intersect(cht[n-1], l)) {
+        cht.pop_back();
+        n = cht.size();
+    }
+    cht.push_back(l);
+    cp = min(cp, (int)cht.size()-1);
+}
+
+long long query(long long x) {
+    while (cp+1 != cht.size() &&
+            intersect(cht[cp], cht[cp+1]) < x) cp++;
+    return cht[cp].m*x + cht[cp].b;
+}
+
+/*
+ * cht in ints
+ */
+
+struct line { long long m, b; };
+long long floordiv(long long a, long long b) {
+    return a / b - (a%b && ((a<0) ^ (b<0)));
+}
+long long intersect(line a, line b) {
+    floordiv(b.b - a.b, a.m - b.m);
+    // for POSITIVE ints: can do:
+    // return (b.b - a.b) / (a.m - b.m);
+}
+vector<line> cht;
+void add(line l) {
+    auto n = cht.size();
+    while (n >= 2 &&
+           intersect(cht[n-1], cht[n-2]) >= intersect(cht[n-1], l)) {
+        cht.pop_back();
+        n = cht.size();
+    }
+    cht.push_back(l);
+}
+long long query(long long x) {
+    int lo = 0; int hi = cht.size()-2;
+    int idx = cht.size()-1;
+    while (lo <= hi) {
+        int mid = (lo+hi)/2;
+        // NOTE: It is critical here that this is >= not >.
+        if (intersect(cht[mid], cht[mid+1]) >= x) {
+            idx = mid; hi = mid-1;
+        } else { lo = mid+1; }
+    }
+    return cht[idx].m*x + cht[idx].b;
+}
+
+/*
+ * cht dp
+ */
+
+int main() {
+    // Base case:
+    dp[0] = baseCaseCost;
+    line l;
+    l.m = m[0];
+    l.b = dp[0];
+    add(l);
+
+    for (int i = 1; i < N; i++) {
+        dp[i] = query(p[i]);
+        line l;
+        l.m = m[i];
+        l.b = dp[i];
+        add(l);
+    }
+    return 0;
+}
+
+/*
+ * covered walkway
+ */
+
+/* Insert CHT code here: You can use the version with only
+ * positive integer queries and non-decreasing queries */
+void add(line l);
+long long query(long long x);
+
+const int MAXN = 1000000;
+int N;
+long long x[MAXN+1];
+long long C;
+
+long long dp[MAXN+1];
+
+int main() {
+    scanf("%d %lld", &N, &C);
+    for (int i = 0; i < N; i++) {
+        scanf("%lld", &x[i]);
+    }
+    for (int i = 0; i < N; i++) {
+        // Compare to formulas written in slides
+        dp[i] = query(x[i]) + C + x[i]*x[i];
+        line l;
+        l.m = -2*x[i];
+        // Base case is i == 0, dp[i-1] = 0.
+        l.b = (i == 0 ? 0 : dp[i-1]) + x[i]*x[i];
+        add(l);
+    }
+    // Again, calculating dp[N-1] using the same formula as above.
+    printf("%lld\n", dp[N-1]);
+}
+
+/*
+ * commando mini
+ */
+
+/* Insert CHT code here: You can use the version with only
+ * positive integer queries and non-decreasing queries */
+void add(line l);
+long long query(long long x);
+
+const int MAXN = 1000000;
+int N;
+long long a, c;
+long long S[MAXN+1];
+long long dp[MAXN+1];
+
+int main() {
+    scanf("%d", &N);
+    scanf("%lld %lld %lld", &a, &c);
+    for (int i = 1; i <= N; i++) {
+        long long x; scanf("%lld", &x);
+        S[i] = S[i-1] + x;
+    }
+    for (int i = 1; i <= N; i++) {
+        line l;
+        l.m = -2*a*S[i-1];
+        l.b = dp[i-1] + a*S[i-1]*S[i-1] + c;
+        add(l);
+        dp[i] = query(S[i]) + a*S[i]*S[i];
+    }
+    printf("%lld\n", dp[N]);
+    return 0;
+}
+
+/*
+ * noisy kids brute force
+ */
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const long long INF = 1e17;
+const int MAXN = 10000;
+const int MAXK = 100;
+int N, K;
+// 1-indexed. S[i] = sum(s_1 + ... + s_i)
+long long S[MAXN+1];
+long long dp[MAXK+1][MAXN+1];
+
+int main() {
+    scanf("%d %d", &N, &K);
+    for (int i = 1; i <= N; i++) {
+        long long s; scanf("%lld", &s);
+        S[i] = S[i-1] + s;
+    }
+    for (int i = 1; i <= N; i++) dp[0][i] = INF;
+    for (int k = 1; k <= K; k++) {
+        for (int j = 1; j <= N; j++) {
+            dp[k][j] = INF;
+            for (int t = 0; t < j; t++) {
+                dp[k][j] = min(dp[k][j],
+                        dp[k-1][t] + (S[j]-S[t])*(S[j]-S[t]));
+            }
+        }
+    }
+    printf("%lld\n", dp[K][N]);
+    return 0;
+}
+
+/*
+ * divide and conquer template
+ */
+
+// Insert your cost function here:
+long long Cost(int i, int j);
+
+// Search range for our DP is in the range [qL, qR]
+// In this branch, calculating dp[k][cL,..cR)
+void dnc(int qL, int qR, int cL, int cR, int k) {
+    if (cR <= cL) return;
+    int bestpos(-1);
+    int mid = (cL + cR) / 2;
+    dp[k][mid] = INF; // assume this is a minimisation problem
+    for (int i = qL; i <= min(qR, mid-1); i++) {
+        // Depending on definition of Cost,
+        //  add Cost(i+1, mid) or Cost(i, mid)
+        long long newcost = dp[k-1][i] + Cost(i+1, mid);
+        if (newcost < dp[k][mid]) {
+            dp[k][mid] = newcost;
+            bestpos = i;
+        }
+    }
+    // Split our range in 2.
+    // In the left, the search range is [qL, bestpos]
+    //  and we calculate dp[k][cL,mid)
+    // In the right, the search range is [bestpos, qR]
+    //  and we calculate dp[k][mid+1,cR)
+    dnc(qL, bestpos, cL, mid, k);
+    dnc(bestpos, qR, mid+1, cR, k);
+}
+
+/*
+ * noisy kids 1
+ */
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const long long INF = 1e17;
+const int MAXN = 10000;
+const int MAXK = 100;
+int N, K;
+long long S[MAXN+1]; // cumulative array
+long long dp[MAXK+1][MAXN+1];
+
+// Cost of segment (i, j]
+long long Cost(int i, int j) {
+    return (S[j]-S[i])*(S[j]-S[i]);
+}
+// Search range: [qL, qR], calculating dp[k][cL..cR)
+void dnc(int qL, int qR, int cL, int cR, int k) {
+    if (cR <= cL) return;
+    int bestpos;
+    int mid = (cL + cR) / 2;
+    dp[k][mid] = INF;
+    for (int i = qL; i <= min(qR, mid-1); i++) {
+        // Cost expects (], so we use Cost(i, mid).
+        long long newcost = dp[k-1][i] + Cost(i, mid);
+        if (newcost < dp[k][mid]) {
+            dp[k][mid] = newcost;
+            bestpos = i;
+        }
+    }
+    dnc(qL, bestpos, cL, mid, k);
+    dnc(bestpos, qR, mid+1, cR, k);
+}
+
+/*
+ * noisy kids 2
+ */
+
+int main() {
+    scanf("%d %d", &N, &K);
+    for (int i = 1; i <= N; i++) {
+        long long c; scanf("%lld", &c);
+        S[i] = S[i-1] + c;
+    }
+    // For K = 0, dp[0][0] = 0 is the base case.
+    for (int i = 1; i <= N; i++) dp[0][i] = INF;
+    // Just call dnc for k from 1 to N
+    // Make sure you get the initial [qL,qR] and [cL, cR) correct.
+    for (int k = 1; k <= K; k++) dnc(0, N, 1, N+1, k);
+    printf("%lld\n", dp[K][N]);
+    return 0;
+}
+
+/*
+ * arranging heaps 1
+ */
+
+#include <bits/stdc++.h>
+using namespace std;
+const long long INF = 1e18;
+const int MAXN = 1000, MAXK = 1000;
+int N, K;
+long long X[MAXN+1], W[MAXN+1], sXW[MAXN+1], sW[MAXN+1];
+long long dp[MAXK+1][MAXN+1];
+
+// Cost of moving mines (i,j] to mine j.
+long long Cost(int i, int j) {
+    return (sW[j]-sW[i])*X[j] - (sXW[j]-sXW[i]);
+}
+// Best choice for our DP is in the range [qL, qR]
+// Calculating dp[k][cL,..cR)
+void dnc(int qL, int qR, int cL, int cR, int k) {
+    if (cR <= cL) return;
+    int bestpos(-1);
+    int mid = (cL + cR) / 2;
+    dp[k][mid] = INF;
+    for (int i = qL; i <= min(qR, mid-1); i++) {
+        // We use Cost(i, mid) since Cost(i,j) is the cost of (i,j]
+        long long newcost = dp[k-1][i] + Cost(i, mid);
+        if (newcost < dp[k][mid]) {
+            dp[k][mid] = newcost;
+            bestpos = i;
+        }
+    }
+    dnc(qL, bestpos, cL, mid, k);
+    dnc(bestpos, qR, mid+1, cR, k);
+}
+
+/*
+ * arranging heaps 2
+ */
+
+int main() {
+    scanf("%d %d", &N, &K);
+    for (int i = 1; i <= N; i++) {
+        scanf("%lld %lld", &X[i], &W[i]);
+        sXW[i] = sXW[i-1] + X[i] * W[i];
+        sW[i] = sW[i-1] + W[i];
+    }
+    for (int i = 1; i <= N; i++) dp[0][i] = INF;
+    for (int k = 1; k <= K; k++) dnc(0, N, 1, N+1, k);
+    printf("%lld\n", dp[K][N]);
+    return 0;
+}
