@@ -8,3 +8,6 @@
 
 ## String
 1.[AC 自动机](./string/1.md) <br/>
+
+## Geometry
+1.[Determining if two consecutive line segments turn left or right ](./geo/1.md) <br/>
